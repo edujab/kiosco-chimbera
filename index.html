@@ -377,6 +377,148 @@
   }
   .btn-cerrar-scanner:hover { background: rgba(255,255,255,0.1); }
 
+
+  .ticket-fab {
+    position: fixed;
+    bottom: 1.5rem;
+    right: 1.5rem;
+    width: 52px; height: 52px;
+    border-radius: 50%;
+    background: var(--accent);
+    color: var(--accent-fg);
+    border: none;
+    cursor: pointer;
+    display: none;
+    align-items: center;
+    justify-content: center;
+    font-size: 22px;
+    box-shadow: 0 2px 12px rgba(0,0,0,0.25);
+    z-index: 50;
+  }
+  .ticket-fab.visible { display: flex; }
+  .ticket-badge {
+    position: absolute;
+    top: -4px; right: -4px;
+    background: #e24b4a;
+    color: #fff;
+    font-size: 11px;
+    font-weight: 600;
+    width: 20px; height: 20px;
+    border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+  }
+  .ticket-overlay {
+    display: none;
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.5);
+    z-index: 90;
+    align-items: flex-end;
+  }
+  .ticket-overlay.visible { display: flex; }
+  .ticket-panel {
+    background: var(--surface);
+    width: 100%;
+    max-height: 90vh;
+    border-radius: var(--radius) var(--radius) 0 0;
+    overflow-y: auto;
+    padding: 1.25rem 1rem 2rem;
+  }
+  .ticket-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 1rem;
+  }
+  .ticket-title { font-size: 17px; font-weight: 600; }
+  .ticket-item {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 10px 0;
+    border-bottom: 0.5px solid var(--border);
+  }
+  .ticket-item-info { flex: 1; min-width: 0; }
+  .ticket-item-name { font-size: 14px; font-weight: 500; color: var(--text); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .ticket-item-price { font-size: 12px; color: var(--text-muted); margin-top: 2px; }
+  .qty-control { display: flex; align-items: center; gap: 6px; flex-shrink: 0; }
+  .qty-btn {
+    width: 28px; height: 28px;
+    border: 0.5px solid var(--border-strong);
+    border-radius: 6px;
+    background: var(--bg);
+    color: var(--text);
+    font-size: 16px;
+    cursor: pointer;
+    display: flex; align-items: center; justify-content: center;
+  }
+  .qty-btn:hover { background: var(--border); }
+  .qty-num { font-size: 15px; font-weight: 500; min-width: 20px; text-align: center; }
+  .ticket-item-total { font-size: 15px; font-weight: 600; min-width: 70px; text-align: right; flex-shrink: 0; }
+  .btn-del-item {
+    width: 28px; height: 28px;
+    border: none;
+    background: transparent;
+    color: var(--danger-text);
+    font-size: 18px;
+    cursor: pointer;
+    display: flex; align-items: center; justify-content: center;
+    flex-shrink: 0;
+  }
+  .ticket-total-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 1rem 0 0.5rem;
+    font-size: 18px;
+    font-weight: 600;
+  }
+  .ticket-footer { display: flex; flex-direction: column; gap: 8px; margin-top: 0.75rem; }
+  .btn-imprimir {
+    width: 100%;
+    padding: 12px;
+    background: var(--accent);
+    color: var(--accent-fg);
+    border: none;
+    border-radius: var(--radius-sm);
+    font-size: 15px;
+    font-weight: 500;
+    cursor: pointer;
+    display: flex; align-items: center; justify-content: center; gap: 8px;
+  }
+  .btn-imprimir:hover { opacity: 0.82; }
+  .btn-limpiar {
+    width: 100%;
+    padding: 12px;
+    background: transparent;
+    color: var(--text-muted);
+    border: 0.5px solid var(--border-strong);
+    border-radius: var(--radius-sm);
+    font-size: 14px;
+    cursor: pointer;
+  }
+  .btn-limpiar:hover { background: var(--bg); }
+  .ticket-empty { text-align: center; padding: 2rem; color: var(--text-faint); font-size: 14px; }
+  .btn-agregar-ticket {
+    font-size: 12px;
+    padding: 4px 10px;
+    border-radius: var(--radius-sm);
+    border: 0.5px solid var(--success-text);
+    color: var(--success-text);
+    background: var(--success-bg);
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    white-space: nowrap;
+    margin-left: 6px;
+  }
+  .btn-agregar-ticket:hover { opacity: 0.8; }
+  @media print {
+    body * { visibility: hidden; }
+    #print-area, #print-area * { visibility: visible; }
+    #print-area { position: fixed; inset: 0; padding: 1rem; }
+  }
 </style>
 </head>
 <body>
@@ -443,6 +585,29 @@
   <div class="products" id="products"></div>
 </div>
 
+
+<button class="ticket-fab" id="ticket-fab" onclick="abrirTicket()">
+  <i class="ti ti-receipt"></i>
+  <span class="ticket-badge" id="ticket-badge">0</span>
+</button>
+
+<div class="ticket-overlay" id="ticket-overlay" onclick="cerrarTicketSiAfuera(event)">
+  <div class="ticket-panel" id="ticket-panel">
+    <div class="ticket-header">
+      <div class="ticket-title"><i class="ti ti-receipt"></i> Ticket</div>
+      <button class="icon-btn" onclick="cerrarTicket()"><i class="ti ti-x"></i></button>
+    </div>
+    <div id="ticket-items"></div>
+    <div id="ticket-area-total"></div>
+    <div class="ticket-footer" id="ticket-footer" style="display:none;">
+      <button class="btn-imprimir" onclick="imprimirTicket()"><i class="ti ti-printer"></i> Imprimir ticket</button>
+      <button class="btn-limpiar" onclick="limpiarTicket()"><i class="ti ti-trash"></i> Limpiar y nuevo ticket</button>
+    </div>
+  </div>
+</div>
+
+<div id="print-area" style="display:none;"></div>
+
 <!-- Scanner overlay -->
 <div class="scanner-overlay" id="scanner-overlay">
   <div class="scanner-title">Apuntá la cámara al código de barras</div>
@@ -454,6 +619,125 @@
 </div>
 
 <script>
+
+var ticket = [];
+
+function agregarAlTicket(p) {
+  var idx = ticket.findIndex(function(t){ return t.codigo === p.codigo && t.desc === p.desc; });
+  if (idx >= 0) {
+    ticket[idx].qty++;
+  } else {
+    ticket.push(Object.assign({}, p, {qty: 1}));
+  }
+  actualizarFAB();
+}
+
+function actualizarFAB() {
+  var fab = document.getElementById('ticket-fab');
+  var badge = document.getElementById('ticket-badge');
+  var total = ticket.reduce(function(s,t){ return s + t.qty; }, 0);
+  badge.textContent = total;
+  fab.classList.toggle('visible', total > 0);
+}
+
+function abrirTicket() {
+  renderTicket();
+  document.getElementById('ticket-overlay').classList.add('visible');
+}
+
+function cerrarTicket() {
+  document.getElementById('ticket-overlay').classList.remove('visible');
+}
+
+function cerrarTicketSiAfuera(e) {
+  if (e.target === document.getElementById('ticket-overlay')) cerrarTicket();
+}
+
+function cambiarQty(idx, delta) {
+  ticket[idx].qty += delta;
+  if (ticket[idx].qty <= 0) ticket.splice(idx, 1);
+  actualizarFAB();
+  renderTicket();
+}
+
+function eliminarItem(idx) {
+  ticket.splice(idx, 1);
+  actualizarFAB();
+  renderTicket();
+}
+
+function limpiarTicket() {
+  ticket = [];
+  actualizarFAB();
+  renderTicket();
+  cerrarTicket();
+}
+
+function renderTicket() {
+  var container = document.getElementById('ticket-items');
+  var totalArea = document.getElementById('ticket-area-total');
+  var footer = document.getElementById('ticket-footer');
+
+  if (!ticket.length) {
+    container.innerHTML = '<div class="ticket-empty">No hay productos en el ticket</div>';
+    totalArea.innerHTML = '';
+    footer.style.display = 'none';
+    return;
+  }
+
+  container.innerHTML = ticket.map(function(t, i) {
+    var subtotal = (t.venta * t.qty).toLocaleString('es-AR', {minimumFractionDigits:0, maximumFractionDigits:2});
+    var unitario = t.venta.toLocaleString('es-AR', {minimumFractionDigits:0, maximumFractionDigits:2});
+    return '<div class="ticket-item">' +
+      '<div class="ticket-item-info">' +
+        '<div class="ticket-item-name">' + t.desc + '</div>' +
+        '<div class="ticket-item-price">$' + unitario + ' c/u</div>' +
+      '</div>' +
+      '<div class="qty-control">' +
+        '<button class="qty-btn" onclick="cambiarQty(' + i + ',-1)">&#8722;</button>' +
+        '<span class="qty-num">' + t.qty + '</span>' +
+        '<button class="qty-btn" onclick="cambiarQty(' + i + ',1)">+</button>' +
+      '</div>' +
+      '<div class="ticket-item-total">$' + subtotal + '</div>' +
+      '<button class="btn-del-item" onclick="eliminarItem(' + i + ')"><i class="ti ti-x"></i></button>' +
+    '</div>';
+  }).join('');
+
+  var total = ticket.reduce(function(s,t){ return s + t.venta * t.qty; }, 0);
+  totalArea.innerHTML = '<div class="ticket-total-row"><span>Total</span><span>$' +
+    total.toLocaleString('es-AR', {minimumFractionDigits:0, maximumFractionDigits:2}) + '</span></div>';
+  footer.style.display = 'flex';
+}
+
+function imprimirTicket() {
+  var fecha = new Date().toLocaleString('es-AR', {day:'2-digit',month:'2-digit',year:'numeric',hour:'2-digit',minute:'2-digit'});
+  var total = ticket.reduce(function(s,t){ return s + t.venta * t.qty; }, 0);
+  var linea = '--------------------------------';
+  var items = ticket.map(function(t) {
+    var sub = (t.venta * t.qty).toLocaleString('es-AR', {minimumFractionDigits:2, maximumFractionDigits:2});
+    var uni = t.venta.toLocaleString('es-AR', {minimumFractionDigits:2, maximumFractionDigits:2});
+    var nombre = t.desc.length > 24 ? t.desc.substring(0,24) + '...' : t.desc;
+    return '<div>' + nombre + '</div><div style="display:flex;justify-content:space-between;color:#555;font-size:12px;"><span>' + t.qty + ' x $' + uni + '</span><span>$' + sub + '</span></div>';
+  }).join('<br>');
+
+  var html = '<div style="font-family:monospace;font-size:13px;max-width:300px;margin:0 auto;color:#000;">' +
+    '<div style="text-align:center;font-size:16px;font-weight:bold;margin-bottom:4px;">Almac&eacute;n La Chimbera</div>' +
+    '<div style="text-align:center;font-size:12px;color:#555;margin-bottom:8px;">' + fecha + '</div>' +
+    '<div>' + linea + '</div><br>' + items + '<br>' +
+    '<div>' + linea + '</div>' +
+    '<div style="display:flex;justify-content:space-between;font-size:15px;font-weight:bold;margin-top:6px;">' +
+      '<span>TOTAL</span><span>$' + total.toLocaleString('es-AR', {minimumFractionDigits:2, maximumFractionDigits:2}) + '</span>' +
+    '</div>' +
+    '<div style="text-align:center;margin-top:12px;font-size:11px;color:#888;">&iexcl;Gracias por su compra!</div>' +
+  '</div>';
+
+  var pa = document.getElementById('print-area');
+  pa.innerHTML = html;
+  pa.style.display = 'block';
+  window.print();
+  pa.style.display = 'none';
+}
+
 // ── Hojas de la planilla ── agregá o quitá nombres acá
 const HOJAS = ['almacen', 'alfer'];
 
@@ -600,6 +884,9 @@ function renderizar() {
           <div class="pc-left">
             <span class="badge badge-sheet">${p.hoja}</span>
             ${modo==='compras' ? `<span class="badge badge-gain">+${p.ganancia}%</span>` : ''}
+            <button class="btn-agregar-ticket" onclick='agregarAlTicket(${JSON.stringify({codigo:p.codigo,desc:p.desc,venta:p.venta,hoja:p.hoja})})'>
+              <i class="ti ti-plus"></i> Ticket
+            </button>
           </div>
           <div style="display:flex;align-items:center;gap:8px;">
             ${p.fecha ? `<div class="pc-date"><i class="ti ti-clock"></i>${p.fecha}</div>` : ''}
