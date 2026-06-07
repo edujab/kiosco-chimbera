@@ -473,10 +473,13 @@ function filtrarHoja(h) {
 function renderizar() {
   const q = (document.getElementById('search')?.value || '').toLowerCase();
   const c = document.getElementById('products');
-  const lista = productos.filter(p =>
-    (hojaActiva === 'Todos' || p.hoja === hojaActiva) &&
-    (!q || p.desc.toLowerCase().includes(q) || String(p.codigo).toLowerCase().includes(q))
-  );
+  const palabras = q.split(/\s+/).filter(Boolean);
+  const lista = productos.filter(p => {
+    if (hojaActiva !== 'Todos' && p.hoja !== hojaActiva) return false;
+    if (!palabras.length) return true;
+    const texto = (String(p.codigo) + ' ' + p.desc).toLowerCase();
+    return palabras.every(pal => texto.includes(pal));
+  });
 
   if (!lista.length) {
     c.innerHTML = `<div class="empty"><i class="ti ti-search"></i><p>Sin resultados</p></div>`;
