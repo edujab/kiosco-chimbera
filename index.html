@@ -299,6 +299,22 @@
     .topbar { padding: 0.75rem 1.5rem; }
     .tabs { padding: 0.75rem 1.5rem 0; }
   }
+  .btn-editar {
+    font-size: 12px;
+    padding: 4px 10px;
+    border-radius: var(--radius-sm);
+    border: 0.5px solid var(--info-text);
+    color: var(--info-text);
+    background: var(--info-bg);
+    text-decoration: none;
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    white-space: nowrap;
+  }
+  .btn-editar:hover { opacity: 0.8; }
+  .btn-editar i { font-size: 13px; }
+
 </style>
 </head>
 <body>
@@ -486,9 +502,11 @@ function renderizar() {
     return;
   }
 
+  const sheetId = document.getElementById('inp-id').value.trim();
   c.innerHTML = lista.map(p => {
     const venta = p.venta.toLocaleString('es-AR', {minimumFractionDigits:0, maximumFractionDigits:2});
     const costo = p.costo.toLocaleString('es-AR', {minimumFractionDigits:0, maximumFractionDigits:2});
+    const urlEditar = `https://docs.google.com/spreadsheets/d/${sheetId}/edit`;
     return `
       <div class="product-card">
         <div class="pc-top">
@@ -506,7 +524,10 @@ function renderizar() {
             <span class="badge badge-sheet">${p.hoja}</span>
             ${modo==='compras' ? `<span class="badge badge-gain">+${p.ganancia}%</span>` : ''}
           </div>
-          ${p.fecha ? `<div class="pc-date"><i class="ti ti-clock"></i>${p.fecha}</div>` : ''}
+          <div style="display:flex;align-items:center;gap:8px;">
+            ${p.fecha ? `<div class="pc-date"><i class="ti ti-clock"></i>${p.fecha}</div>` : ''}
+            ${modo==='compras' ? `<a href="${urlEditar}" target="_blank" class="btn-editar"><i class="ti ti-edit"></i> Editar</a>` : ''}
+          </div>
         </div>
       </div>`;
   }).join('');
