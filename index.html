@@ -314,10 +314,6 @@
       <input type="text" id="inp-id" value="1tT-KogRhz08EG8N52QGs63aQ4orP4Hc8yC5q7wKu-v8" />
       <p class="help">Ya tiene el ID de tu planilla <code>mercaderiaChimbera</code></p>
     </div>
-    <div class="field">
-      <label>Nombre de hoja (opcional — dejá vacío para cargar la primera hoja)</label>
-      <input type="text" id="inp-sheet" placeholder="Ej: Proveedor1" />
-    </div>
   </div>
 
   <div class="card">
@@ -365,6 +361,9 @@
 </div>
 
 <script>
+// ── Hojas de la planilla ── agregá o quitá nombres acá
+const HOJAS = ['almacen', 'alfer'];
+
 let modo = 'kiosco';
 let productos = [];
 let hojas = [];
@@ -412,7 +411,6 @@ async function cargarHoja(sheetId, sheetName) {
 
 async function loadData() {
   const sheetId = document.getElementById('inp-id').value.trim();
-  const sheetName = document.getElementById('inp-sheet').value.trim();
   if (!sheetId) { alert('Ingresa el ID de la planilla'); return; }
 
   document.getElementById('setup').style.display = 'none';
@@ -424,7 +422,8 @@ async function loadData() {
   productos = []; hojas = []; hojaActiva = 'Todos';
 
   try {
-    productos = await cargarHoja(sheetId, sheetName);
+    const resultados = await Promise.all(HOJAS.map(h => cargarHoja(sheetId, h)));
+    productos = resultados.flat();
     hojas = [...new Set(productos.map(p => p.hoja))];
     if (productos.length === 0) {
       setStatus('La planilla esta vacia. Agrega productos en Google Sheets y vuelve a cargar.', 'error');
@@ -442,10 +441,10 @@ async function loadData() {
 
 async function recargar() {
   const sheetId = document.getElementById('inp-id').value.trim();
-  const sheetName = document.getElementById('inp-sheet').value.trim();
   setStatus('Actualizando...', 'loading');
   try {
-    productos = await cargarHoja(sheetId, sheetName);
+    const resultados = await Promise.all(HOJAS.map(h => cargarHoja(sheetId, h)));
+    productos = resultados.flat();
     hojas = [...new Set(productos.map(p => p.hoja))];
     clearStatus();
     buildTabs();
