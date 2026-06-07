@@ -380,7 +380,7 @@
 
   .ticket-fab {
     position: fixed;
-    bottom: 5rem;
+    bottom: 8rem;
     right: 1.5rem;
     width: 52px; height: 52px;
     border-radius: 50%;
@@ -514,6 +514,64 @@
     margin-left: 6px;
   }
   .btn-agregar-ticket:hover { opacity: 0.8; }
+
+  .btn-articulo-rapido {
+    width: 100%;
+    padding: 10px;
+    background: transparent;
+    color: var(--info-text);
+    border: 0.5px dashed var(--info-text);
+    border-radius: var(--radius-sm);
+    font-size: 14px;
+    cursor: pointer;
+    display: flex; align-items: center; justify-content: center; gap: 6px;
+    margin-bottom: 0.75rem;
+  }
+  .btn-articulo-rapido:hover { background: var(--info-bg); }
+
+  .articulo-rapido-form {
+    display: none;
+    flex-direction: column;
+    gap: 8px;
+    margin-bottom: 0.75rem;
+    padding: 0.75rem;
+    background: var(--bg);
+    border-radius: var(--radius-sm);
+    border: 0.5px solid var(--border);
+  }
+  .articulo-rapido-form.visible { display: flex; }
+  .articulo-rapido-form input {
+    width: 100%;
+    padding: 8px 10px;
+    border: 0.5px solid var(--border-strong);
+    border-radius: var(--radius-sm);
+    background: var(--surface);
+    color: var(--text);
+    font-size: 14px;
+    outline: none;
+  }
+  .articulo-rapido-form input:focus { border-color: var(--text); }
+  .form-row { display: flex; gap: 8px; }
+  .btn-confirmar-rapido {
+    flex: 1;
+    padding: 9px;
+    background: var(--accent);
+    color: var(--accent-fg);
+    border: none;
+    border-radius: var(--radius-sm);
+    font-size: 14px;
+    font-weight: 500;
+    cursor: pointer;
+  }
+  .btn-cancelar-rapido {
+    padding: 9px 14px;
+    background: transparent;
+    color: var(--text-muted);
+    border: 0.5px solid var(--border-strong);
+    border-radius: var(--radius-sm);
+    font-size: 14px;
+    cursor: pointer;
+  }
   @media print {
     body * { visibility: hidden; }
     #print-area, #print-area * { visibility: visible; }
@@ -597,6 +655,17 @@
       <div class="ticket-title"><i class="ti ti-receipt"></i> Ticket</div>
       <button class="icon-btn" onclick="cerrarTicket()"><i class="ti ti-x"></i></button>
     </div>
+    <button class="btn-articulo-rapido" onclick="toggleFormRapido()">
+      <i class="ti ti-plus"></i> Agregar artículo sin lista
+    </button>
+    <div class="articulo-rapido-form" id="form-rapido">
+      <input type="text" id="rapido-desc" placeholder="Descripción del artículo" />
+      <input type="number" id="rapido-precio" placeholder="Precio de venta" inputmode="decimal" />
+      <div class="form-row">
+        <button class="btn-confirmar-rapido" onclick="confirmarRapido()">Agregar</button>
+        <button class="btn-cancelar-rapido" onclick="toggleFormRapido()">Cancelar</button>
+      </div>
+    </div>
     <div id="ticket-items"></div>
     <div id="ticket-area-total"></div>
     <div class="ticket-footer" id="ticket-footer" style="display:none;">
@@ -619,6 +688,28 @@
 </div>
 
 <script>
+
+
+function toggleFormRapido() {
+  var form = document.getElementById('form-rapido');
+  form.classList.toggle('visible');
+  if (form.classList.contains('visible')) {
+    document.getElementById('rapido-desc').focus();
+  } else {
+    document.getElementById('rapido-desc').value = '';
+    document.getElementById('rapido-precio').value = '';
+  }
+}
+
+function confirmarRapido() {
+  var desc = document.getElementById('rapido-desc').value.trim();
+  var precio = parseFloat(document.getElementById('rapido-precio').value);
+  if (!desc) { document.getElementById('rapido-desc').focus(); return; }
+  if (!precio || precio <= 0) { document.getElementById('rapido-precio').focus(); return; }
+  agregarAlTicket({codigo: '', desc: desc, venta: precio, hoja: 'manual'});
+  toggleFormRapido();
+  renderTicket();
+}
 
 var ticket = [];
 
