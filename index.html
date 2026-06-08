@@ -555,6 +555,42 @@
     font-size: 14px;
     cursor: pointer;
   }
+
+  .ticket-item-price-wrap { display: flex; align-items: center; gap: 6px; }
+  .btn-edit-price {
+    width: 22px; height: 22px;
+    border: none;
+    background: transparent;
+    color: var(--text-faint);
+    font-size: 13px;
+    cursor: pointer;
+    display: inline-flex; align-items: center; justify-content: center;
+    padding: 0;
+  }
+  .btn-edit-price:hover { color: var(--info-text); }
+  .precio-edit-wrap {
+    display: flex; align-items: center; gap: 4px; margin-top: 4px;
+  }
+  .precio-edit-wrap input {
+    width: 90px;
+    padding: 4px 8px;
+    border: 0.5px solid var(--info-text);
+    border-radius: 6px;
+    background: var(--surface);
+    color: var(--text);
+    font-size: 13px;
+    outline: none;
+  }
+  .btn-precio-ok {
+    padding: 4px 10px;
+    background: var(--info-bg);
+    color: var(--info-text);
+    border: 0.5px solid var(--info-text);
+    border-radius: 6px;
+    font-size: 13px;
+    cursor: pointer;
+    white-space: nowrap;
+  }
   @media print {
     body > *:not(#print-area) { display: none !important; }
     #print-area {
@@ -682,6 +718,36 @@
 <script>
 
 
+
+function mostrarEditPrecio(idx) {
+  var wrap = document.getElementById('tprice-edit-' + idx);
+  var lbl = document.getElementById('tprice-lbl-' + idx);
+  wrap.style.display = 'flex';
+  lbl.style.display = 'none';
+  var inp = document.getElementById('tprice-inp-' + idx);
+  inp.focus();
+  inp.select();
+  inp.onkeydown = function(e) { if (e.key === 'Enter') confirmarPrecio(idx); };
+}
+
+function confirmarPrecio(idx) {
+  var inp = document.getElementById('tprice-inp-' + idx);
+  var nuevo = parseFloat(inp.value);
+  if (!nuevo || nuevo <= 0) return;
+  ticket[idx].venta = nuevo;
+  // Actualizar sin re-renderizar todo para no perder foco
+  var uni = nuevo.toLocaleString('es-AR', {minimumFractionDigits:0, maximumFractionDigits:2});
+  var sub = (nuevo * ticket[idx].qty).toLocaleString('es-AR', {minimumFractionDigits:0, maximumFractionDigits:2});
+  document.getElementById('tprice-lbl-' + idx).textContent = '$' + uni + ' c/u';
+  document.getElementById('tprice-lbl-' + idx).style.display = 'inline';
+  document.getElementById('tprice-edit-' + idx).style.display = 'none';
+  document.getElementById('tsubtotal-' + idx).textContent = '$' + sub;
+  // Actualizar total
+  var total = ticket.reduce(function(s,t){ return s + t.venta * t.qty; }, 0);
+  document.querySelector('.ticket-total-row span:last-child').textContent =
+    '$' + total.toLocaleString('es-AR', {minimumFractionDigits:0, maximumFractionDigits:2});
+}
+
 function toggleFormRapido() {
   var form = document.getElementById('form-rapido');
   form.classList.toggle('visible');
@@ -706,11 +772,12 @@ function confirmarRapido() {
 var ticket = [];
 
 function agregarAlTicket(p) {
+  var pRedondeado = Object.assign({}, p, {venta: Math.ceil(p.venta)});
   var idx = ticket.findIndex(function(t){ return t.codigo === p.codigo && t.desc === p.desc; });
   if (idx >= 0) {
     ticket[idx].qty++;
   } else {
-    ticket.push(Object.assign({}, p, {qty: 1}));
+    ticket.push(Object.assign({}, pRedondeado, {qty: 1}));
   }
   actualizarFAB();
 }
@@ -770,17 +837,24 @@ function renderTicket() {
   container.innerHTML = ticket.map(function(t, i) {
     var subtotal = (t.venta * t.qty).toLocaleString('es-AR', {minimumFractionDigits:0, maximumFractionDigits:2});
     var unitario = t.venta.toLocaleString('es-AR', {minimumFractionDigits:0, maximumFractionDigits:2});
-    return '<div class="ticket-item">' +
+    return '<div class="ticket-item" id="titem-' + i + '">' +
       '<div class="ticket-item-info">' +
         '<div class="ticket-item-name">' + t.desc + '</div>' +
-        '<div class="ticket-item-price">$' + unitario + ' c/u</div>' +
+        '<div class="ticket-item-price-wrap">' +
+          '<span class="ticket-item-price" id="tprice-lbl-' + i + '">$' + unitario + ' c/u</span>' +
+          '<button class="btn-edit-price" onclick="mostrarEditPrecio(' + i + ')" title="Editar precio"><i class="ti ti-pencil"></i></button>' +
+        '</div>' +
+        '<div class="precio-edit-wrap" id="tprice-edit-' + i + '" style="display:none;">' +
+          '<input type="number" id="tprice-inp-' + i + '" value="' + t.venta + '" inputmode="decimal" />' +
+          '<button class="btn-precio-ok" onclick="confirmarPrecio(' + i + ')">OK</button>' +
+        '</div>' +
       '</div>' +
       '<div class="qty-control">' +
         '<button class="qty-btn" onclick="cambiarQty(' + i + ',-1)">&#8722;</button>' +
         '<span class="qty-num">' + t.qty + '</span>' +
         '<button class="qty-btn" onclick="cambiarQty(' + i + ',1)">+</button>' +
       '</div>' +
-      '<div class="ticket-item-total">$' + subtotal + '</div>' +
+      '<div class="ticket-item-total" id="tsubtotal-' + i + '">$' + subtotal + '</div>' +
       '<button class="btn-del-item" onclick="eliminarItem(' + i + ')"><i class="ti ti-x"></i></button>' +
     '</div>';
   }).join('');
@@ -821,7 +895,7 @@ function imprimirTicket() {
 }
 
 // ── Hojas de la planilla ── agregá o quitá nombres acá
-const HOJAS = ['ALMACEN', 'ALFER', 'JKARAM', 'PORTEÑA', 'LONAR', 'ABC'];
+const HOJAS = ['ALMACEN', 'CORTIFER', 'ALFER', 'ABC', 'COLON', 'FRAGATAP', 'JKARAM', 'PROV', 'PORTEÑA'];
 
 let modo = 'kiosco';
 let productos = [];
